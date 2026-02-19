@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Rewire",
+  "version": "1.0",
+  "description": "A desktop screen time limiter with fun unlock challenges.",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": ["tabs", "storage", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "index2.js"
+  },
+  "externally_connectable": {
+    "matches": ["<all_urls>"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["index2.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
