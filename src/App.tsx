@@ -13,6 +13,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "./components/ui/tabs"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./components/ui/dialog"
+import { Field, FieldGroup } from "./components/ui/field"
+import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { ScrollArea } from "./components/ui/scroll-area"
@@ -20,13 +32,22 @@ import { Separator } from "./components/ui/separator"
 import { Sun, Moon, Settings, Edit2 } from "lucide-react"
 
 export default function Rewire() {
+  
   const [theme, setTheme] = useState("light")
-  const [blockedSites, setBlockedSites] = useState(["www.youtube.com", "x.com", "www.instagram.com", "www.reddit.com"])
+
+  // Ex: ["https://www.youtube.com/", "https://www.x.com/", "https://www.instagram.com/", "https://www.reddit.com/"]
+  const [blockedSites, setBlockedSites] = useState<string[]>()
   const [noBlockSites, setNoBlockSites] = useState(["google.com", "khanacademy.org"])
   const [newBlocked, setNewBlocked] = useState("")
   const [newNoBlock, setNewNoBlock] = useState("")
 
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+
+  useEffect(() => {
+    (window as any).chrome.storage.local.get(["key"]).then((result: any) => {
+      setBlockedSites(result.key);
+    });
+  }, [])
 
   useEffect(() => {
     console.log("Block List updating and sending to background...")
@@ -40,6 +61,14 @@ export default function Rewire() {
     } catch (e) {
       console.warn("Background not available — retrying...");
       setTimeout(updateBlockList, 500);
+    } finally {
+      (window as any).chrome.storage.local.set({ key: blockedSites }, () => {
+        console.log("Blocked sites stored!");
+
+        (window as any).chrome.storage.local.get(["key"], (result: any) => {
+          console.log("Stored Sites:", result.key);
+        });
+      });
     }
   };
 
@@ -122,15 +151,46 @@ export default function Rewire() {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[500px] pr-2">
-                {blockedSites.map((site, i) => (
+                {blockedSites?.map((site, i) => (
                   <div
                     key={i}
                     className="flex justify-between items-center py-2 border-b last:border-b-0"
                   >
                     <span>{site}</span>
-                    <Button variant="ghost" size="icon">
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
+                    <Dialog>
+                      <form>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-sm">
+                          <DialogHeader>
+                            <DialogTitle>Edit profile</DialogTitle>
+                            <DialogDescription>
+                              Make changes to your profile here. Click save when you&apos;re
+                              done.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <FieldGroup>
+                            <Field>
+                              <Label htmlFor="name-1">Name</Label>
+                              <Input id="name-1" name="name" defaultValue="Pedro Duarte" />
+                            </Field>
+                            <Field>
+                              <Label htmlFor="username-1">Username</Label>
+                              <Input id="username-1" name="username" defaultValue="@peduarte" />
+                            </Field>
+                          </FieldGroup>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button type="submit">Save changes</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </form>
+                    </Dialog>
                   </div>
                 ))}
               </ScrollArea>
@@ -141,11 +201,18 @@ export default function Rewire() {
                   value={newBlocked}
                   onChange={(e) => setNewBlocked(e.target.value)}
                 />
-                <Button
+                <Button className="cursor-pointer"
                   onClick={() => {
-                    if (newBlocked.trim()) {
-                      setBlockedSites([...blockedSites, newBlocked.trim()])
-                      setNewBlocked("")
+                    let tempSite = newBlocked.trim()
+                    let tempDomain = new URL(tempSite).hostname
+
+                    if (tempDomain && !blockedSites?.includes(tempDomain)) {
+                      console.log(tempDomain, "added!");
+                      setBlockedSites([...(blockedSites || []), tempDomain]);
+                      setNewBlocked("");
+                    }
+                    else {
+                      console.log("Failed to add", tempSite)
                     }
                   }}
                 >
