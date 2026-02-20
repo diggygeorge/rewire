@@ -1,4 +1,5 @@
 let blockedSites = [];
+console.log("Blocked Sites (re)initialized")
 
 function block(activeInfo, tab) {
   var url = new URL(tab.url)
@@ -38,6 +39,7 @@ function block(activeInfo, tab) {
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Rewire extension installed!");
+  // run blocking logic
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {

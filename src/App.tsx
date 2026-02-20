@@ -29,7 +29,7 @@ import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { ScrollArea } from "./components/ui/scroll-area"
 import { Separator } from "./components/ui/separator"
-import { Sun, Moon, Settings, Edit2 } from "lucide-react"
+import { Sun, Moon, Settings, Edit2, Trash2 } from "lucide-react"
 
 export default function Rewire() {
   
@@ -39,6 +39,7 @@ export default function Rewire() {
   const [blockedSites, setBlockedSites] = useState<string[]>()
   const [noBlockSites, setNoBlockSites] = useState(["google.com", "khanacademy.org"])
   const [newBlocked, setNewBlocked] = useState("")
+  const [editBlocked, setEditBlocked] = useState("")
   const [newNoBlock, setNewNoBlock] = useState("")
 
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
@@ -157,40 +158,43 @@ export default function Rewire() {
                     className="flex justify-between items-center py-2 border-b last:border-b-0"
                   >
                     <span>{site}</span>
-                    <Dialog>
-                      <form>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-sm">
-                          <DialogHeader>
-                            <DialogTitle>Edit profile</DialogTitle>
-                            <DialogDescription>
-                              Make changes to your profile here. Click save when you&apos;re
-                              done.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <FieldGroup>
-                            <Field>
-                              <Label htmlFor="name-1">Name</Label>
-                              <Input id="name-1" name="name" defaultValue="Pedro Duarte" />
-                            </Field>
-                            <Field>
-                              <Label htmlFor="username-1">Username</Label>
-                              <Input id="username-1" name="username" defaultValue="@peduarte" />
-                            </Field>
-                          </FieldGroup>
-                          <DialogFooter>
-                            <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <Button type="submit">Save changes</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </form>
-                    </Dialog>
+                    <div className="flex">
+                      <Dialog>
+                        <form>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-sm">
+                            <DialogHeader>
+                              <DialogTitle>Edit website</DialogTitle>
+                              <DialogDescription>
+                                Make changes to your profile here. Click save when you&apos;re
+                                done.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <FieldGroup>
+                              <Field>
+                                <Label htmlFor="name-1">Name</Label>
+                                <Input id="name" name="name" onChange={(e) => setEditBlocked(e.target.value)} defaultValue={site} />
+                              </Field>
+                            </FieldGroup>
+                            <DialogFooter>
+                              <DialogClose asChild>
+                                <Button variant="outline" onClick={() => setEditBlocked("")}>Cancel</Button>
+                              </DialogClose>
+                              <DialogClose>
+                                <Button onClick={() => setBlockedSites(blockedSites.map(s => (s === site ? editBlocked : s)))}>Save changes</Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </form>
+                      </Dialog>
+                      <Button onClick={() => setBlockedSites(blockedSites.filter(s => s !== site))}variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </ScrollArea>
