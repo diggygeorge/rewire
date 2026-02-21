@@ -9,15 +9,12 @@
   "permissions": ["tabs", "storage", "scripting", "activeTab"],
   "host_permissions": ["<all_urls>"],
   "background": {
-    "service_worker": "index2.js"
-  },
-  "externally_connectable": {
-    "matches": ["<all_urls>"]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["index2.js"],
+      "js": ["content.js"],
       "run_at": "document_idle"
     }
   ]

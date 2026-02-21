@@ -33,7 +33,7 @@ import { Sun, Moon, Settings, Edit2, Trash2 } from "lucide-react"
 
 export default function Rewire() {
   
-  const [theme, setTheme] = useState("light")
+  const [theme, setTheme] = useState("dark")
 
   // Ex: ["https://www.youtube.com/", "https://www.x.com/", "https://www.instagram.com/", "https://www.reddit.com/"]
   const [blockedSites, setBlockedSites] = useState<string[]>()
@@ -80,7 +80,7 @@ export default function Rewire() {
     <div
       className={`${
         theme === "dark" ? "dark" : ""
-      } w-[600px] h-[800px] p-4 rounded-2xl bg-background text-foreground shadow-xl border`}
+      } w-[600px] h-[800px] p-4 bg-background text-foreground shadow-xl border`}
     >
       {/* Top Bar */}
       <div className="flex items-center justify-between mb-4">
@@ -119,7 +119,7 @@ export default function Rewire() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[600px] pr-2">
+              <ScrollArea className="h-[450px] pr-2">
                 {[
                   { site: "youtube.com", time: "1h 45m" },
                   { site: "twitter.com", time: "1h 10m" },
@@ -151,7 +151,7 @@ export default function Rewire() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[500px] pr-2">
+              <ScrollArea className="h-[450px] pr-2">
                 {blockedSites?.map((site, i) => (
                   <div
                     key={i}
@@ -201,7 +201,7 @@ export default function Rewire() {
 
               <div className="flex items-center gap-2 mt-4">
                 <Input
-                  placeholder="Add new website"
+                  placeholder="https://{website.url}/"
                   value={newBlocked}
                   onChange={(e) => setNewBlocked(e.target.value)}
                 />
@@ -237,7 +237,7 @@ export default function Rewire() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[500px] pr-2">
+              <ScrollArea className="h-[450px] pr-2">
                 {noBlockSites.map((site, i) => (
                   <div
                     key={i}

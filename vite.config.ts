@@ -15,10 +15,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: 'index.html',
-        background: 'src/background/index.js'
+        background: 'src/background/index.js',
+        content: 'src/content/index.js'
       },
       output: {
-        entryFileNames: 'index.js',
+        entryFileNames: '[name].js',
       }
     }
   }
