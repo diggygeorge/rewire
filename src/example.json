@@ -1,0 +1,27 @@
+[{
+   "name": "Day",
+   "site": "https://www.instagram.com/",
+   "times": {
+      "Sunday": "30m",
+      "Monday": "45m",
+      "Tuesday": "0m",
+      "Wednesday": "30m",
+      "Thursday": "0m",
+      "Friday": "1440m",
+      "Saturday": "1440m"
+   }
+}
+,
+{
+   "name": "Night",
+   "site": "https://www.youtube.com/",
+   "times": {
+      "Sunday": [["0000","0700"], ["1800", "2330"]],
+      "Monday": [["0000","0700"], ["1800", "2330"]],
+      "Tuesday": [["0000","0700"], ["1800", "2330"]],
+      "Wednesday": [["0000","0700"], ["1800", "2330"]],
+      "Thursday": [["0000","0700"], ["1800", "2330"]],
+      "Friday": [["0000","0700"]],
+      "Saturday": []
+   }
+}]

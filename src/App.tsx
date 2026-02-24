@@ -1,5 +1,5 @@
 import "./App.css"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Card,
   CardContent,
@@ -13,74 +13,28 @@ import {
   TabsList,
   TabsTrigger,
 } from "./components/ui/tabs"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./components/ui/dialog"
-import { Field, FieldGroup } from "./components/ui/field"
-import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { ScrollArea } from "./components/ui/scroll-area"
 import { Separator } from "./components/ui/separator"
-import { Sun, Moon, Settings, Edit2, Trash2 } from "lucide-react"
+import { Sun, Moon, Settings, Edit2 } from "lucide-react"
+import AddNewBlock from "./components/AddNewBlock"
 
 export default function Rewire() {
   
   const [theme, setTheme] = useState("dark")
 
   // Ex: ["https://www.youtube.com/", "https://www.x.com/", "https://www.instagram.com/", "https://www.reddit.com/"]
-  const [blockedSites, setBlockedSites] = useState<string[]>()
   const [noBlockSites, setNoBlockSites] = useState(["google.com", "khanacademy.org"])
-  const [newBlocked, setNewBlocked] = useState("")
-  const [editBlocked, setEditBlocked] = useState("")
   const [newNoBlock, setNewNoBlock] = useState("")
 
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
-
-  useEffect(() => {
-    (window as any).chrome.storage.local.get(["key"]).then((result: any) => {
-      setBlockedSites(result.key);
-    });
-  }, [])
-
-  useEffect(() => {
-    console.log("Block List updating and sending to background...")
-  const updateBlockList = async () => {
-    try {
-
-      await (window as any).chrome.runtime.sendMessage({
-        type: "UPDATE_BLOCKLIST",
-        data: blockedSites,
-      });
-    } catch (e) {
-      console.warn("Background not available — retrying...");
-      setTimeout(updateBlockList, 500);
-    } finally {
-      (window as any).chrome.storage.local.set({ key: blockedSites }, () => {
-        console.log("Blocked sites stored!");
-
-        (window as any).chrome.storage.local.get(["key"], (result: any) => {
-          console.log("Stored Sites:", result.key);
-        });
-      });
-    }
-  };
-
-  updateBlockList();
-}, [blockedSites])
 
   return (
     <div
       className={`${
         theme === "dark" ? "dark" : ""
-      } w-[600px] h-[800px] p-4 bg-background text-foreground shadow-xl border`}
+      } w-[500px] h-[750px] p-4 bg-background text-foreground shadow-xl border`}
     >
       {/* Top Bar */}
       <div className="flex items-center justify-between mb-4">
@@ -141,91 +95,7 @@ export default function Rewire() {
           </Card>
         </TabsContent>
 
-        {/* BLOCKED SITES TAB */}
-        <TabsContent value="blocked" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Blocked Websites</CardTitle>
-              <CardDescription>
-                Manage sites you want to stay away from.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[450px] pr-2">
-                {blockedSites?.map((site, i) => (
-                  <div
-                    key={i}
-                    className="flex justify-between items-center py-2 border-b last:border-b-0"
-                  >
-                    <span>{site}</span>
-                    <div className="flex">
-                      <Dialog>
-                        <form>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-sm">
-                            <DialogHeader>
-                              <DialogTitle>Edit website</DialogTitle>
-                              <DialogDescription>
-                                Make changes to your profile here. Click save when you&apos;re
-                                done.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <FieldGroup>
-                              <Field>
-                                <Label htmlFor="name-1">Name</Label>
-                                <Input id="name" name="name" onChange={(e) => setEditBlocked(e.target.value)} defaultValue={site} />
-                              </Field>
-                            </FieldGroup>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline" onClick={() => setEditBlocked("")}>Cancel</Button>
-                              </DialogClose>
-                              <DialogClose>
-                                <Button onClick={() => setBlockedSites(blockedSites.map(s => (s === site ? editBlocked : s)))}>Save changes</Button>
-                              </DialogClose>
-                            </DialogFooter>
-                          </DialogContent>
-                        </form>
-                      </Dialog>
-                      <Button onClick={() => setBlockedSites(blockedSites.filter(s => s !== site))}variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-
-              <div className="flex items-center gap-2 mt-4">
-                <Input
-                  placeholder="https://{website.url}/"
-                  value={newBlocked}
-                  onChange={(e) => setNewBlocked(e.target.value)}
-                />
-                <Button className="cursor-pointer"
-                  onClick={() => {
-                    let tempSite = newBlocked.trim()
-                    let tempDomain = new URL(tempSite).hostname
-
-                    if (tempDomain && !blockedSites?.includes(tempDomain)) {
-                      console.log(tempDomain, "added!");
-                      setBlockedSites([...(blockedSites || []), tempDomain]);
-                      setNewBlocked("");
-                    }
-                    else {
-                      console.log("Failed to add", tempSite)
-                    }
-                  }}
-                >
-                  Add
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <AddNewBlock/>
 
         {/* NO-BLOCK LIST TAB */}
         <TabsContent value="noblock" className="mt-4">

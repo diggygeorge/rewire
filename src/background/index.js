@@ -1,5 +1,17 @@
-let blockedSites = [];
+var blockedSites = []
 console.log("Blocked Sites (re)initialized")
+
+var screenTimes = new Map()
+var currentSite = "extensions/"
+
+function updateTime() {
+  const currentTime = new Date().toLocaleTimeString();
+  console.log(currentSite, currentTime)
+  screenTimes.set(currentSite, (screenTimes.get(currentSite) ?? 0) + 1);
+  console.log(currentSite, screenTimes.get(currentSite))
+}
+
+setInterval(updateTime, 1000)
 
 function block(activeInfo, tab) {
   var url = new URL(tab.url)
@@ -22,7 +34,11 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
   console.log("Tab switch detected!")
-  console.log(activeInfo.tabId)
+  chrome.tabs.get(activeInfo.tabId, function(tab) {
+    let url = new URL(tab.url)
+    let domain = url.hostname
+    currentSite = domain
+  })
   chrome.tabs.get(activeInfo.tabId, (tab) => {
     block(activeInfo, tab)
   });
@@ -30,6 +46,9 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   console.log("Tab update detected!");
+  let url = new URL(tab.url)
+  let domain = url.hostname
+  currentSite = domain
 
   if (changeInfo.status === 'complete') {
     console.log("Tab status complete!");
