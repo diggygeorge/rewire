@@ -6,13 +6,5 @@ interface Interval {
 export default interface TimeBlock {
     name: string
     website: string[]
-    times: {
-        sunday: number | Interval
-        monday: number | Interval
-        tuesday: number | Interval
-        wednesday: number | Interval
-        thursday: number | Interval
-        friday: number | Interval
-        saturday: number | Interval
-    }
+    times: (number | Interval)[]
 }

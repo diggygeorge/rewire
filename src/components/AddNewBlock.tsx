@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react"
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  CardContent
 } from "./ui/card"
 import {
   TabsContent,
@@ -62,7 +59,7 @@ export default function AddNewBlock() {
   const [websites, setWebsites] = useState("") // comma separated for easy entry
   
   // Limit Specific State
-  const [timeLimit, setTimeLimit] = useState("") // e.g. "30 min"
+  const [timeLimit, setTimeLimit] = useState(0) // e.g. 30 min
   
   // Interval Specific State
   const [startTime, setStartTime] = useState("")
@@ -109,7 +106,7 @@ export default function AddNewBlock() {
     setStep('choose')
     setName("")
     setWebsites("")
-    setTimeLimit("")
+    setTimeLimit(0)
     setStartTime("")
     setEndTime("")
     setSelectedDays([])
@@ -130,20 +127,12 @@ export default function AddNewBlock() {
 
     if (step === 'limit') {
       // Helper to convert min to src (number)
-      const minToSec = (t: string) => {
-        if (!t) return 0
-        const [m, _] = t.split(' min')
-        return 60 * parseInt(m)
-      }
 
-      let sec = minToSec(timeLimit)
+      let sec = timeLimit * 60
       newBlock = {
         name,
         website: websiteArray,
-        times: {
-          sunday: sec, monday: sec, tuesday: sec,
-          wednesday: sec, thursday: sec, friday: sec, saturday: sec
-        }
+        times: [sec, sec, sec, sec, sec, sec, sec]
       }
     } else {
       // Helper to convert HH:MM to minutes (number) for your Interval interface
@@ -158,21 +147,24 @@ export default function AddNewBlock() {
         end: timeToNum(endTime)
       }
 
-      // Default string for unselected days
-      const noTime = 0
+      // Default interval for unselected days
+      const noTime: Interval = {
+        start: -1,
+        end: -1
+      }
 
       newBlock = {
         name,
         website: websiteArray,
-        times: {
-          sunday: selectedDays.includes('sunday') ? interval : noTime,
-          monday: selectedDays.includes('monday') ? interval : noTime,
-          tuesday: selectedDays.includes('tuesday') ? interval : noTime,
-          wednesday: selectedDays.includes('wednesday') ? interval : noTime,
-          thursday: selectedDays.includes('thursday') ? interval : noTime,
-          friday: selectedDays.includes('friday') ? interval : noTime,
-          saturday: selectedDays.includes('saturday') ? interval : noTime,
-        }
+        times: 
+          [selectedDays.includes('sunday') ? interval : noTime,
+          selectedDays.includes('monday') ? interval : noTime,
+          selectedDays.includes('tuesday') ? interval : noTime,
+          selectedDays.includes('wednesday') ? interval : noTime,
+          selectedDays.includes('thursday') ? interval : noTime,
+          selectedDays.includes('friday') ? interval : noTime,
+          selectedDays.includes('saturday') ? interval : noTime]
+        
       }
     }
 
@@ -187,21 +179,68 @@ export default function AddNewBlock() {
     )
   }
 
+  const renderSchedule = (times: TimeBlock["times"]) => {
+  // 1. Handle "Time Limit" format (e.g., "30 min")
+  if (typeof times[1] === "string") {
+    // If it's a string and not our "0 min" placeholder, it's a daily limit
+    const limit = times[1] === "0 min" ? "Inactive" : times[1];
+    return (
+      <div className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">Daily Limit:</span> {limit}
+      </div>
+    );
+  }
+
+  // 2. Handle "Time Interval" format (e.g., { start: 540, end: 1020 })
+  // Filter out the inactive days
+  const activeDays = Object.entries(times).filter(
+    ([_, val]) => typeof val !== "number" && val.start !== -1
+  );
+
+  if (activeDays.length === 0) {
+    return <div className="text-sm text-muted-foreground">Inactive</div>;
+  }
+
+  // Grab the interval logic (assuming all selected days share the same interval)
+  const interval = activeDays[0][1] as Interval;
+  
+  // Convert minutes (e.g., 540) to 12-hour format (e.g., "9:00 AM")
+  const formatTime = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    const ampm = h >= 12 ? "PM" : "AM";
+    return `${h % 12 || 12}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  // Format active days into a clean string (e.g., "Mon, Tue, Wed")
+  const formattedDays = activeDays
+    .map(([day]) => DAYS_OF_WEEK[parseInt(day)].label.toUpperCase() + DAYS_OF_WEEK[parseInt(day)].id.slice(1, 3))
+    .join(", ");
+
+  return (
+    <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <div>
+        <span className="font-medium text-foreground">Active Days:</span> {formattedDays}
+      </div>
+      <div>
+        <span className="font-medium text-foreground">Hours:</span> {formatTime(interval.start)} - {formatTime(interval.end)}
+      </div>
+    </div>
+  );
+};
+
   return (
     <TabsContent value="blocked" className={`${drawerOpen ? 'overflow-hidden' : ''} mt-4`}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Focus Blocks</CardTitle>
-            <CardDescription>
-              Manage your restricted sites and schedules.
-            </CardDescription>
+          <div className="text-center font-bold">
+            <p className="font-bold">Focus Blocks</p>
+            <p className="font-semibold">Manage your time restrictions and schedules.</p>
           </div>
           
           {/* DRAWER TRIGGER */}
           <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
             <DrawerTrigger asChild>
-              <Button size="sm" className="gap-2">
+              <Button size="sm" className="fixed bottom-4 right-4 gap-2">
                 <Plus className="h-4 w-4" /> Add Block
               </Button>
             </DrawerTrigger>
@@ -237,22 +276,87 @@ export default function AddNewBlock() {
                 {/* STEP 2A: TIME LIMIT */}
                 {step === 'limit' && (
                   <>
-                    <DrawerHeader>
-                      <DrawerTitle>Set Time Limit</DrawerTitle>
-                      <DrawerDescription>Allow a specific amount of time for these sites.</DrawerDescription>
-                    </DrawerHeader>
-                    <div className="p-4 pb-0 space-y-4">
+                    <div className="p-4 space-y-4">
                       <div className="space-y-2">
                         <Label>Block Name</Label>
                         <Input placeholder="e.g. Social Media" value={name} onChange={e => setName(e.target.value)} />
                       </div>
                       <div className="space-y-2">
                         <Label>Websites (comma separated)</Label>
-                        <Input placeholder="instagram.com, twitter.com" value={websites} onChange={e => setWebsites(e.target.value)} />
+                        <Input placeholder="www.instagram.com, www.twitter.com" value={websites} onChange={e => setWebsites(e.target.value)} />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Daily Limit</Label>
-                        <Input placeholder="e.g. 30 min" value={timeLimit} onChange={e => setTimeLimit(e.target.value)} />
+                      <div className="space-y-6 py-4">
+                        {/* Header & Large Number Display */}
+                        <div className="flex flex-col items-center justify-center space-y-1">
+                          <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                            Daily Limit
+                          </Label>
+                          <div className="flex items-baseline gap-1.5">
+                            <h1 className="text-6xl font-extrabold tracking-tighter text-foreground">
+                              {timeLimit}
+                            </h1>
+                            <span className="text-xl font-semibold text-muted-foreground">min</span>
+                          </div>
+                        </div>
+
+                        {/* Time Adjustment Controls */}
+                        <div className="flex justify-center gap-3">
+                          {/* Subtraction Group */}
+                          <div className="flex items-center rounded-lg border bg-secondary/30 p-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(Math.max(0, timeLimit - 30))}
+                            >
+                              -30
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(Math.max(0, timeLimit - 15))}
+                            >
+                              -15
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(Math.max(0, timeLimit - 5))}
+                            >
+                              -5
+                            </Button>
+                          </div>
+                          
+                          {/* Addition Group */}
+                          <div className="flex items-center rounded-lg border bg-secondary/30 p-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(timeLimit + 5)}
+                            >
+                              +5
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(timeLimit + 15)}
+                            >
+                              +15
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-3 text-muted-foreground hover:text-foreground" 
+                              onClick={() => setTimeLimit(timeLimit + 30)}
+                            >
+                              +30
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </>
@@ -261,11 +365,7 @@ export default function AddNewBlock() {
                 {/* STEP 2B: TIME INTERVAL */}
                 {step === 'interval' && (
                   <>
-                    <DrawerHeader>
-                      <DrawerTitle>Set Time Interval</DrawerTitle>
-                      <DrawerDescription>Block access during specific hours and days.</DrawerDescription>
-                    </DrawerHeader>
-                    <div className="p-4 pb-0 space-y-4">
+                    <div className="p-4 space-y-4">
                       <div className="space-y-2">
                         <Label>Block Name</Label>
                         <Input placeholder="e.g. Deep Work" value={name} onChange={e => setName(e.target.value)} />
@@ -304,7 +404,7 @@ export default function AddNewBlock() {
                   </>
                 )}
 
-                <DrawerFooter>
+                <DrawerFooter className="pt-0">
                   {step !== 'choose' && (
                     <Button onClick={handleAddBlock} disabled={!name || !websites}>
                       Add Block
@@ -317,14 +417,12 @@ export default function AddNewBlock() {
               </div>
             </DrawerContent>
           </Drawer>
-
-        </CardHeader>
         <CardContent>
           
           {/* ACCORDION LIST */}
-          <ScrollArea className="h-[450px] pr-4">
+          <ScrollArea className="max-h-[450px] pr-4">
             {!blocks || blocks.length === 0 ? (
-              <div className="text-center text-muted-foreground mt-10">
+              <div className="text-center text-muted-foreground mt-10 pl-0">
                 No blocks configured. Add one to get started.
               </div>
             ) : (
@@ -348,13 +446,26 @@ export default function AddNewBlock() {
                       </Button>
                     </div>
                     <AccordionContent>
-                      <div className="bg-muted/30 rounded-md p-3">
-                        <div className="text-sm font-semibold mb-2">Restricted Sites:</div>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {block.website.map((w, idx) => (
-                            <li key={idx} className="text-sm text-muted-foreground">{w}</li>
-                          ))}
-                        </ul>
+                      <div className="bg-muted/30 rounded-md p-4 space-y-4">
+                        
+                        {/* Restricted Sites Section */}
+                        <div>
+                          <div className="text-sm font-semibold mb-2">Restricted Sites:</div>
+                          <div className="space-y-1">
+                            {block.website.map((w, idx) => (
+                              <p key={idx} className="text-sm text-muted-foreground">{w}</p>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Time Restrictions Section */}
+                        <div>
+                          <div className="text-sm font-semibold mb-2 border-t pt-3 border-border/50">
+                            Schedule & Allowances:
+                          </div>
+                          {renderSchedule(block.times)}
+                        </div>
+
                       </div>
                     </AccordionContent>
                   </AccordionItem>

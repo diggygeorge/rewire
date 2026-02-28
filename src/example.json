@@ -1,27 +1,43 @@
-[{
-   "name": "Day",
-   "site": "https://www.instagram.com/",
-   "times": {
-      "Sunday": "30m",
-      "Monday": "45m",
-      "Tuesday": "0m",
-      "Wednesday": "30m",
-      "Thursday": "0m",
-      "Friday": "1440m",
-      "Saturday": "1440m"
-   }
-}
-,
-{
-   "name": "Night",
-   "site": "https://www.youtube.com/",
-   "times": {
-      "Sunday": [["0000","0700"], ["1800", "2330"]],
-      "Monday": [["0000","0700"], ["1800", "2330"]],
-      "Tuesday": [["0000","0700"], ["1800", "2330"]],
-      "Wednesday": [["0000","0700"], ["1800", "2330"]],
-      "Thursday": [["0000","0700"], ["1800", "2330"]],
-      "Friday": [["0000","0700"]],
-      "Saturday": []
-   }
-}]
+[
+    {
+        "name": "Social Media",
+        "website": [
+            "https://www.instagram.com/",
+            "https://www.youtube.com/",
+            "https://www.reddit.com/"
+        ],
+        "times": {
+            "sunday": 1800,
+            "monday": 1800,
+            "tuesday": 1800,
+            "wednesday": 1800,
+            "thursday": 1800,
+            "friday": 1800,
+            "saturday": 1800
+        }
+    },
+    {
+        "name": "Lock In Session",
+        "website": [
+            "https://www.instagram.com/",
+            "https://www.youtube.com/",
+            "https://www.reddit.com/"
+        ],
+        "times": [
+            {"start": -1,
+             "end": -1},
+            {"start": 1080,
+            "end": 120},
+            {"start": 1080,
+            "end": 120},
+            {"start": 1080,
+            "end": 120},
+            {"start": 1080,
+            "end": 120},
+            {"start": 1080,
+            "end": 120},
+            {"start": -1,
+            "end": -1}
+         ]
+      }
+]

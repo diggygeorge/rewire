@@ -34,7 +34,7 @@ export default function Rewire() {
     <div
       className={`${
         theme === "dark" ? "dark" : ""
-      } w-[500px] h-[750px] p-4 bg-background text-foreground shadow-xl border`}
+      } w-[500px] h-[800px] p-4 bg-background text-foreground shadow-xl border`}
     >
       {/* Top Bar */}
       <div className="flex items-center justify-between mb-4">
@@ -45,9 +45,9 @@ export default function Rewire() {
           </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {theme === "light" ? (
-              <Moon className="h-5 w-5" />
-            ) : (
               <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
             )}
           </Button>
         </div>
