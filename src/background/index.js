@@ -2,6 +2,7 @@
 var blocks = []
 console.log("Blocked Sites (re)initialized")
 
+var errorThrown = false
 var screenTimes = new Map()
 var currentSite = "extensions/"
 var currentTime = ""
@@ -14,10 +15,44 @@ function updateTime() {
 
   console.log(currentSite, currentTime, currentDay)
   screenTimes.set(currentSite, (screenTimes.get(currentSite) ?? 0) + 1);
-  console.log(currentSite, screenTimes.get(currentSite))
+  console.log(screenTimes)
+  if (errorThrown == true) {
+    // If error, keep trying until success
+    console.log("Retrying...")
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        let currentTab = tabs[0];
+        if (currentTab) {
+          block({ tabId: currentTab.id }, currentTab);
+        }
+      }
+    )
+  }
 }
 
 setInterval(updateTime, 1000)
+
+function timeRemaining(time, day, times) {
+    // time: hour and minute parsed into minute index (Ex: 12PM -> 720)
+    // day: given as a integer (0 for Sunday, 1 for Monday, etc.)
+    // times: block.times
+
+    let acc = 0;
+    if (time < times[day].start) {
+        acc += times[day].start - time
+    } else {
+        acc += 1440 - time
+
+        let i = (day + 1) % 7;
+
+        while (i != day && times[i].start == -1) {
+            acc += 1440;
+            i = (i + 1) % 7;
+        }
+
+        acc += times[i].start
+    }
+    return acc
+}
 
 function isOverLimit(currentSite, time, day, blocks) {
     // currentSite: current hovered site
@@ -27,7 +62,8 @@ function isOverLimit(currentSite, time, day, blocks) {
     if (!blocks) {
       return false
     }
-    const isOverLimitAnon = (block) => {
+    for (let i = 0; i < blocks.length; i++) {
+        let block = blocks[i]
         if (block.website?.includes(currentSite)) {
             let block_interval = block.times[day]
             let arr = time.split(":")
@@ -35,40 +71,59 @@ function isOverLimit(currentSite, time, day, blocks) {
             let minute = arr[1]
             let minute_index = parseInt(hour) * 60 + parseInt(minute)
             let yesterday = block.times[(day + 6) % 7]
-
+            console.log(minute_index, day, block?.times)
             if (block_interval.start == -1 && minute_index >= yesterday.end) {
-                return false
+                return timeRemaining(minute_index, day, block?.times)
             }
             if (block_interval.start > block_interval.end) {
                 if (minute_index >= block_interval.start || minute_index < block_interval.end) {
                     return true
                 } else {
-                    return false;
+                    return timeRemaining(minute_index, day, block?.times)
                 }
             } else {
                 if (minute_index < yesterday.end) {
                     return true
                 } else if (minute_index >= block_interval.start && minute_index < block_interval.end) {
                     return true
+                } else {
+                    console.log(minute_index, day, block?.times, timeRemaining(minute_index, day, block?.times))
+                    return timeRemaining(minute_index, day, block?.times)
                 }
             }
         }
     }
-    return blocks.some(isOverLimitAnon); 
+
+    return false
+    
 }
 
-function block(activeInfo, tab) {
+async function block(activeInfo, tab) {
   var url = new URL(tab.url)
   var domain = url.hostname
   console.log("Site:", domain)
   console.log("Blocks:", blocks)
-    if (isOverLimit(domain, currentTime, currentDay, blocks)) {
-        chrome.tabs.sendMessage(activeInfo.tabId, { type: "BLOCK" }).catch((error) => {
-        console.log("Error:", error);
-      })
+  let limit = isOverLimit(domain, currentTime, currentDay, blocks)
+    if (limit == true) {
+        try {
+          chrome.tabs.sendMessage(activeInfo.tabId, { type: "BLOCK" })
+          .then((response) => {
+            errorThrown = false;
+          })
+        } catch (error) {
+          errorThrown = true
+          console.log(error);
+        }
       }
-      else {
-        console.log("Tab is not in blocked list!")
+      else if (limit != false) {
+        console.log("Restriction will occur in", limit, "minutes!")
+        const alarm = await chrome.alarms.get(`${domain}-restriction`);
+
+        if (!alarm) {
+          await chrome.alarms.create(`${domain}-restriction`, { periodInMinutes: limit });
+        }
+      } else {
+        console.log("Current site not blocked!")
       }
 }
 
@@ -84,7 +139,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
     currentSite = domain
   })
   chrome.tabs.get(activeInfo.tabId, (tab) => {
-    block(activeInfo, tab)
+     block(activeInfo, tab)
   });
 });
 
@@ -93,9 +148,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   let url = new URL(tab.url)
   let domain = url.hostname
   currentSite = domain
-
-  if (changeInfo.status === 'complete') {
-    console.log("Tab status complete!");
+  console.log("Status:", changeInfo.status)
+  if (changeInfo.status === 'complete' || !changeInfo.status) {
     block({ tabId }, tab);
   }
 });

@@ -47,7 +47,7 @@ describe('isOverLimit', () => {
 
     test('returns false if the day is disabled (start is -1)', () => {
         // Sunday (day 0) is disabled for Social Media
-        expect(isOverLimit('www.instagram.com', '04:00:00', 0, sampleBlocks)).toBe(false);
+        expect(isOverLimit('www.instagram.com', '04:00:00', 0, sampleBlocks)).toBe(1230);
     });
 
     test('returns true if time is strictly inside a normal interval', () => {
@@ -57,12 +57,12 @@ describe('isOverLimit', () => {
 
     test('returns false if time is before a normal interval', () => {
         // Monday, 00:15:00 is 15 minutes (before 30)
-        expect(isOverLimit('www.youtube.com', '00:15:00', 1, sampleBlocks)).toBe(false);
+        expect(isOverLimit('www.youtube.com', '00:15:00', 1, sampleBlocks)).toBe(15);
     });
 
     test('returns false if time is after a normal interval', () => {
         // Monday, 08:00:00 is 480 minutes (after 420)
-        expect(isOverLimit('www.youtube.com', '08:00:00', 1, sampleBlocks)).toBe(false);
+        expect(isOverLimit('www.youtube.com', '08:00:00', 1, sampleBlocks)).toBe(990);
     });
 
     test('returns true if time is inside an interval that crosses midnight (before midnight)', () => {
@@ -77,6 +77,6 @@ describe('isOverLimit', () => {
 
     test('returns false if time is outside an interval that crosses midnight', () => {
         // Monday, 12:00:00 is 720 minutes (not > 1320 and not < 120)
-        expect(isOverLimit('www.reddit.com', '12:00:00', 1, sampleBlocks)).toBe(false);
+        expect(isOverLimit('www.reddit.com', '12:00:00', 1, sampleBlocks)).toBe(600);
     });
 });
