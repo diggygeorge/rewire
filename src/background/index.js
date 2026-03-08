@@ -1,35 +1,11 @@
 
 var blocks = []
-console.log("Blocked Sites (re)initialized")
-
 var errorThrown = false
 var screenTimes = new Map()
-var currentSite = "extensions/"
+var currentSite = "extensions"
 var currentTime = ""
 var currentDay = -1
-
-function updateTime() {
-  let date = new Date()
-  currentTime = date.toLocaleTimeString('en-US', {hour12: false})
-  currentDay = currentDay !== date.getDay() ? date.getDay() : currentDay
-
-  console.log(currentSite, currentTime, currentDay)
-  screenTimes.set(currentSite, (screenTimes.get(currentSite) ?? 0) + 1);
-  console.log(screenTimes)
-  if (errorThrown == true) {
-    // If error, keep trying until success
-    console.log("Retrying...")
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        let currentTab = tabs[0];
-        if (currentTab) {
-          block({ tabId: currentTab.id }, currentTab);
-        }
-      }
-    )
-  }
-}
-
-setInterval(updateTime, 1000)
+var siteStartTime = new Date()
 
 function timeRemaining(time, day, times) {
     // time: hour and minute parsed into minute index (Ex: 12PM -> 720)
@@ -99,6 +75,9 @@ function isOverLimit(currentSite, time, day, blocks) {
 }
 
 async function block(activeInfo, tab) {
+  let date = new Date()
+  currentDay = currentDay !== date.getDay() ? date.getDay() : currentDay
+
   var url = new URL(tab.url)
   var domain = url.hostname
   console.log("Site:", domain)
@@ -133,13 +112,30 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
   console.log("Tab switch detected!")
+  let newSiteStartTime = Date.now()
+  let difference = newSiteStartTime - siteStartTime
+
+  // add difference to chart
+  screenTimes.set(currentSite, (screenTimes.get(currentSite) ?? 0) + difference / 1000)
+  siteStartTime = newSiteStartTime
+  console.log("Added a total of", difference / 1000, "seconds to the list!")
+  const serializbleTime = Array.from(screenTimes.entries())
+
+  chrome.storage.local.set({ time: serializbleTime }, () => {
+      console.log("Screen Time Updated!");
+      
+      chrome.storage.local.get(["time"], (result) => {
+        console.log("Screen Time:", result.time);
+      });
+    });
+
   chrome.tabs.get(activeInfo.tabId, function(tab) {
     let url = new URL(tab.url)
     let domain = url.hostname
     currentSite = domain
-  })
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
-     block(activeInfo, tab)
+    // DID YOU IMPLEMENT THE ALARM LOGIC?
+
+    block(activeInfo, tab)
   });
 });
 
@@ -158,6 +154,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "UPDATE_BLOCKLIST") {
     blocks = message.data
   }
+  if (message.type === "GET_CURRENT_STATUS") {
+    sendResponse({site: currentSite, startTime: siteStartTime})
+  }
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     let currentTab = tabs[0];
     
@@ -165,4 +164,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       block({ tabId: currentTab.id }, currentTab);
     }
   });
+  return true
 })

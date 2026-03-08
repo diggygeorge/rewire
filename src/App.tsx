@@ -19,6 +19,7 @@ import { ScrollArea } from "./components/ui/scroll-area"
 import { Separator } from "./components/ui/separator"
 import { Sun, Moon, Settings, Edit2 } from "lucide-react"
 import AddNewBlock from "./components/AddNewBlock"
+import ScreenTimeChart from "./components/PieChart"
 
 export default function Rewire() {
   
@@ -64,36 +65,7 @@ export default function Rewire() {
         </TabsList>
 
         {/* DASHBOARD TAB */}
-        <TabsContent value="dashboard" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Today's Usage</CardTitle>
-              <CardDescription>
-                Track how much time you've spent on each site today.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[450px] pr-2">
-                {[
-                  { site: "youtube.com", time: "1h 45m" },
-                  { site: "twitter.com", time: "1h 10m" },
-                  { site: "reddit.com", time: "45m" },
-                  { site: "medium.com", time: "30m" },
-                  { site: "wikipedia.org", time: "25m" },
-                  { site: "chat.openai.com", time: "2h 20m" },
-                ].map(({ site, time }) => (
-                  <div
-                    key={site}
-                    className="flex justify-between items-center py-2 border-b last:border-b-0"
-                  >
-                    <span className="font-medium">{site}</span>
-                    <span className="text-muted-foreground">{time}</span>
-                  </div>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <ScreenTimeChart/>
 
         <AddNewBlock/>
 
