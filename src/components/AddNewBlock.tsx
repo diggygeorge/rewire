@@ -48,6 +48,7 @@ const DAYS_OF_WEEK = [
 type CreationStep = 'choose' | 'limit' | 'interval'
 
 export default function AddNewBlock() {
+  const [isLoaded, setIsLoaded] = useState(false)
   const [blocks, setBlocks] = useState<TimeBlock[]>([])
   
   // Drawer State
@@ -58,30 +59,27 @@ export default function AddNewBlock() {
   const [name, setName] = useState("")
   const [websites, setWebsites] = useState("") // comma separated for easy entry
   
-  // Limit Specific State
   const [timeLimit, setTimeLimit] = useState(0) // e.g. 30 min
-  
-  // Interval Specific State
   const [startTime, setStartTime] = useState("")
   const [endTime, setEndTime] = useState("")
   const [selectedDays, setSelectedDays] = useState<string[]>([])
 
     useEffect(() => {
-      console.log("Blocks:", blocks)
-    }, [blocks])
+    (window as any).chrome.storage.local.get(["key"]).then((result: any) => {
+      setBlocks(result.key || []); 
+      setIsLoaded(true); 
+    });
+  }, [])
 
-    useEffect(() => {
-      (window as any).chrome.storage.local.get(["key"]).then((result: any) => {
-        setBlocks(result.key);
-      });
-    }, [])
-  
-    useEffect(() => {
-      console.log("Block List updating and sending to background...")
-    const updateBlockList = async () => {
+  useEffect(() => {
+    if (!isLoaded) return; 
+
+    console.log("Block List updating and sending to background...")
+    
+    const updateBlockList = () => {
+      console.log(blocks, isLoaded)
       try {
-  
-        await (window as any).chrome.runtime.sendMessage({
+        (window as any).chrome.runtime.sendMessage({
           type: "UPDATE_BLOCKLIST",
           data: blocks,
         });
@@ -91,16 +89,12 @@ export default function AddNewBlock() {
       } finally {
         (window as any).chrome.storage.local.set({ key: blocks }, () => {
           console.log("Blocked sites stored!");
-  
-          (window as any).chrome.storage.local.get(["key"], (result: any) => {
-            console.log("Stored Sites:", result.key);
-          });
         });
       }
     };
-  
+
     updateBlockList();
-  }, [blocks])
+  }, [blocks, isLoaded])
 
   const resetForm = () => {
     setStep('choose')
@@ -131,9 +125,11 @@ export default function AddNewBlock() {
       let sec = timeLimit * 60
       newBlock = {
         name,
+        type: "LIMIT",
         website: websiteArray,
         times: [sec, sec, sec, sec, sec, sec, sec]
       }
+      console.log("Adding New Block:", newBlock)
     } else {
       // Helper to convert HH:MM to minutes (number) for your Interval interface
       const timeToNum = (t: string) => {
@@ -155,6 +151,7 @@ export default function AddNewBlock() {
 
       newBlock = {
         name,
+        type: "INTERVAL",
         website: websiteArray,
         times: 
           [selectedDays.includes('sunday') ? interval : noTime,
@@ -168,7 +165,7 @@ export default function AddNewBlock() {
       }
     }
 
-    setBlocks([...blocks, newBlock])
+    setBlocks(prevBlocks => [...prevBlocks, newBlock])
     setDrawerOpen(false)
     setTimeout(resetForm, 300)
   }
@@ -179,21 +176,21 @@ export default function AddNewBlock() {
     )
   }
 
-  const renderSchedule = (times: TimeBlock["times"]) => {
+  const renderSchedule = (block: TimeBlock) => {
   // 1. Handle "Time Limit" format (e.g., "30 min")
-  if (typeof times[1] === "string") {
+  if (block.type === "LIMIT") {
     // If it's a string and not our "0 min" placeholder, it's a daily limit
-    const limit = times[1] === "0 min" ? "Inactive" : times[1];
+    const limit = block.times[1] as number / 60;
     return (
       <div className="text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">Daily Limit:</span> {limit}
+        <span className="font-medium text-foreground">Daily Limit:</span> {limit} min
       </div>
     );
   }
 
   // 2. Handle "Time Interval" format (e.g., { start: 540, end: 1020 })
   // Filter out the inactive days
-  const activeDays = Object.entries(times).filter(
+  const activeDays = Object.entries(block.times).filter(
     ([_, val]) => typeof val !== "number" && val.start !== -1
   );
 
@@ -463,7 +460,7 @@ export default function AddNewBlock() {
                           <div className="text-sm font-semibold mb-2 border-t pt-3 border-border/50">
                             Schedule & Allowances:
                           </div>
-                          {renderSchedule(block.times)}
+                          {renderSchedule(block)}
                         </div>
 
                       </div>

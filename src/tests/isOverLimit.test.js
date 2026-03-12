@@ -5,6 +5,7 @@ describe('isOverLimit', () => {
     const sampleBlocks = [
         {
             "name": "Social Media",
+            "type": "INTERVAL",
             "website": [
                 "www.instagram.com",
                 "www.youtube.com"
@@ -21,6 +22,7 @@ describe('isOverLimit', () => {
         },
         {
             "name": "Night Owl Block",
+            "type": "INTERVAL",
             "website": [
                 "www.reddit.com"
             ],

@@ -38,7 +38,6 @@ function isOverLimit(currentSite, time, day, blocks) {
             let minute = arr[1]
             let minute_index = parseInt(hour) * 60 + parseInt(minute)
             let yesterday = block.times[(day + 6) % 7]
-            console.log(minute_index, day, block?.times)
             if (block_interval.start == -1 && minute_index >= yesterday.end) {
                 return timeRemaining(minute_index, day, block?.times)
             }
@@ -54,7 +53,6 @@ function isOverLimit(currentSite, time, day, blocks) {
                 } else if (minute_index >= block_interval.start && minute_index < block_interval.end) {
                     return true
                 } else {
-                    console.log(minute_index, day, block?.times, timeRemaining(minute_index, day, block?.times))
                     return timeRemaining(minute_index, day, block?.times)
                 }
             }

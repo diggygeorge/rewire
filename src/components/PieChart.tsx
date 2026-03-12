@@ -42,7 +42,7 @@ export default function ScreenTimeChart() {
         setScreenTime(result.time)
       };
     });
-
+    console.log("Getting current status from background...");
     (window as any).chrome.runtime.sendMessage({ type: "GET_CURRENT_STATUS" }, (response: any) => {
       if (response && response.site && response.startTime) {
         setActiveSession({ site: response.site, startTime: response.startTime });
@@ -80,7 +80,8 @@ export default function ScreenTimeChart() {
   }
 
   const chartData = liveChartData.map(([site, time, displayMinutes], index) => {
-    const colorIndex = (index % 5) + 1; 
+    // rotate through 7 colors instead of 5 now that we have more defined
+    const colorIndex = (index % 7) + 1; 
     return {
       site: site,
       time: time,
@@ -160,8 +161,21 @@ export default function ScreenTimeChart() {
                 />
               </PieChart>
             </ChartContainer>
-          )}
-
+          )
+        }
+        {chartData.length > 7 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold mb-2">Other Sites:</h3>
+            <ul className="space-y-1 text-sm">
+              {chartData.slice(7).map((item) => (
+                <li key={item.site} className="flex justify-between">
+                  <span className="truncate">{item.site}</span>
+                  <span className="font-mono">{item.display}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         </CardContent>
       </Card>
     </TabsContent>
