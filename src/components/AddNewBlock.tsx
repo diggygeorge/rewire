@@ -22,6 +22,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "./ui/drawer"
+import { Checkbox } from "./ui/checkbox"
 import { ScrollArea } from "./ui/scroll-area"
 import { Label } from "./ui/label"
 import { Button } from "./ui/button"
@@ -58,6 +59,13 @@ export default function AddNewBlock() {
   // Form State
   const [name, setName] = useState("")
   const [websites, setWebsites] = useState("") // comma separated for easy entry
+  const socialSites = [
+    "www.youtube.com",
+    "www.instagram.com",
+    "www.reddit.com",
+    "www.x.com"
+  ];
+  const [addSocial, setAddSocial] = useState(false);
   
   const [timeLimit, setTimeLimit] = useState(0) // e.g. 30 min
   const [startTime, setStartTime] = useState("")
@@ -100,6 +108,7 @@ export default function AddNewBlock() {
     setStep('choose')
     setName("")
     setWebsites("")
+    setAddSocial(false);
     setTimeLimit(0)
     setStartTime("")
     setEndTime("")
@@ -226,9 +235,33 @@ export default function AddNewBlock() {
   );
 };
 
+  // keep addSocial in sync with websites string
+  useEffect(() => {
+    const list = websites.split(',').map(s => s.trim()).filter(Boolean);
+    const hasAll = socialSites.every(site => list.includes(site));
+    setAddSocial(hasAll);
+  }, [websites]);
+
+  const handleSocialChange = (checked: boolean) => {
+    setAddSocial(checked);
+    setWebsites(prev => {
+      const list = prev.split(',').map(s => s.trim()).filter(Boolean);
+      if (checked) {
+        socialSites.forEach(site => {
+          if (!list.includes(site)) list.push(site);
+        });
+      } else {
+        socialSites.forEach(site => {
+          const idx = list.indexOf(site);
+          if (idx !== -1) list.splice(idx, 1);
+        });
+      }
+      return list.join(', ');
+    });
+  };
+
   return (
-    <TabsContent value="blocked" className={`${drawerOpen ? 'overflow-hidden' : ''} mt-4`}>
-      <Card>
+    <TabsContent value="blocked" className={`${drawerOpen ? 'overflow-hidden' : ''} mt-4`}>      <Card>
           <div className="text-center font-bold">
             <p className="font-bold">Focus Blocks</p>
             <p className="font-semibold">Manage your time restrictions and schedules.</p>
@@ -278,9 +311,16 @@ export default function AddNewBlock() {
                         <Label>Block Name</Label>
                         <Input placeholder="e.g. Social Media" value={name} onChange={e => setName(e.target.value)} />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 flex">
                         <Label>Websites (comma separated)</Label>
                         <Input placeholder="www.instagram.com, www.twitter.com" value={websites} onChange={e => setWebsites(e.target.value)} />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={addSocial}
+                          onCheckedChange={(c) => handleSocialChange(!!c)}
+                        />
+                        <Label>Include Social Media</Label>
                       </div>
                       <div className="space-y-6 py-4">
                         {/* Header & Large Number Display */}
@@ -370,6 +410,13 @@ export default function AddNewBlock() {
                       <div className="space-y-2">
                         <Label>Websites (comma separated)</Label>
                         <Input placeholder="youtube.com, reddit.com" value={websites} onChange={e => setWebsites(e.target.value)} />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={addSocial}
+                          onCheckedChange={(c) => handleSocialChange(!!c)}
+                        />
+                        <Label>Add social media</Label>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">

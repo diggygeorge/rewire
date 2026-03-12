@@ -145,7 +145,7 @@ async function block(activeInfo, tab) {
           const alarm = await chrome.alarms.get(`${domain}-restriction`);
 
           if (!alarm) {
-            await chrome.alarms.create(`${domain}-restriction`, { periodInMinutes: limit });
+            await chrome.alarms.create(`${domain}-restriction`, { periodInMinutes: Math.max(limit, 0.5) });
           }
         }
         console.log("Current site not blocked!")
