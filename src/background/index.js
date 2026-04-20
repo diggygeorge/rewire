@@ -7,6 +7,14 @@ var currentTime = ""
 var currentDay = -1
 var siteStartTime = new Date()
 
+function keepAlive() {
+  setInterval(() => {
+    chrome.runtime.getPlatformInfo(function() {
+      console.log('Keeping service worker alive.');
+    });
+  }, 20000);
+}
+
 function timeRemaining(time, day, times) {
     // time: hour and minute parsed into minute index (Ex: 12PM -> 720)
     // day: given as a integer (0 for Sunday, 1 for Monday, etc.)
@@ -77,7 +85,7 @@ function isOverBlockLimit(currentSite, time, day, blocks) {
 function isOverTimeLimit(currentSite, limits, currentDay, screenTimes) {
   // currentSite: current hovered site
   // limits: list of time limits, see src/timeblock.ts
-  console.log(currentSite, limits, currentDay, screenTimes)
+  //console.log(currentSite, limits, currentDay, screenTimes)
   if (!limits) {
     return false
   }
@@ -116,16 +124,16 @@ async function block(activeInfo, tab) {
   var url = new URL(tab.url)
   
   var domain = url.hostname
-  console.log("Site:", domain)
-  console.log("Blocks:", blocks)
+  //console.log("Site:", domain)
+  //console.log("Blocks:", blocks)
   let intervalLimit = isOverBlockLimit(domain, currentTime, currentDay, blocks)
   let timeLimit = isOverTimeLimit(domain, blocks, currentDay, screenTimes)
-  console.log(intervalLimit, timeLimit)
+  //console.log(intervalLimit, timeLimit)
 
     if (intervalLimit == true || timeLimit == true) {
-        console.log("Sending blocking message from background...")
+        //console.log("Sending blocking message from background...")
         chrome.tabs.sendMessage(activeInfo.tabId, { type: "BLOCK" }).catch((error) => {
-            console.log("Regular Block", error);
+            //console.log("Regular Block", error);
           });
       }
       let limit = false; 
@@ -141,30 +149,32 @@ async function block(activeInfo, tab) {
         limit = timeLimit;
       }
         if (limit != false) {
-          console.log("Restriction will occur in", limit, "minutes!")
+          //console.log("Restriction will occur in", limit, "minutes!")
           const alarm = await chrome.alarms.get(`${domain}-restriction`);
 
           if (!alarm) {
             await chrome.alarms.create(`${domain}-restriction`, { periodInMinutes: Math.max(limit, 0.5) });
           }
         }
-        console.log("Current site not blocked!")
+        //console.log("Current site not blocked!")
       }
     
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Rewire extension installed!");
+  //console.log("Rewire extension installed!");
+  keepAlive(); // starts keepalive logic for service worker
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
   console.log("Tab switch detected!")
+  keepAlive();
   let newSiteStartTime = Date.now()
   let difference = newSiteStartTime - siteStartTime
 
   // add difference to chart
   screenTimes.set(currentSite, (screenTimes.get(currentSite) ?? 0) + difference / 1000)
   siteStartTime = newSiteStartTime
-  console.log("Added a total of", difference / 1000, "seconds to the list!")
+  //console.log("Added a total of", difference / 1000, "seconds to the list!")
   const serializbleTime = Array.from(screenTimes.entries())
 
   chrome.storage.local.set({ time: serializbleTime }, () => {
@@ -189,11 +199,12 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log("Tab update detected!");
+  keepAlive();
+  //console.log("Tab update detected!");
   let url = new URL(tab.url)
   let domain = url.hostname
   currentSite = domain
-  console.log("Status:", changeInfo.status)
+  //console.log("Status:", changeInfo.status)
   if (changeInfo.status === 'complete' || !changeInfo.status) {
     block({ tabId }, tab);
   }
@@ -201,11 +212,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "UPDATE_BLOCKLIST") {
-    console.log("Updating blocklist...")
+    //console.log("Updating blocklist...")
     blocks = message.data
   }
   if (message.type === "GET_CURRENT_STATUS") {
-    console.log("Asking for current status...")
+    //console.log("Asking for current status...")
     sendResponse({site: currentSite, startTime: siteStartTime})
   }
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -223,14 +234,14 @@ chrome.alarms.onAlarm.addListener(() => {
     let currentTab = tabs[0];
     
     if (currentTab) {
-    console.log("ALARM SET OFF!");
+    //console.log("ALARM SET OFF!");
         chrome.tabs.sendMessage(currentTab.id, { type: "BLOCK" })
           .then((response) => {
             errorThrown = false; 
           })
           .catch((error) => {
             errorThrown = true;
-            console.log("Alarm Block", error);
+            //console.log("Alarm Block", error);
           });
         }
       })

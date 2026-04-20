@@ -96,7 +96,7 @@ export default function AddNewBlock() {
         setTimeout(updateBlockList, 500);
       } finally {
         (window as any).chrome.storage.local.set({ key: blocks }, () => {
-          console.log("Blocked sites stored!");
+          //console.log("Blocked sites stored!");
         });
       }
     };
@@ -138,7 +138,7 @@ export default function AddNewBlock() {
         website: websiteArray,
         times: [sec, sec, sec, sec, sec, sec, sec]
       }
-      console.log("Adding New Block:", newBlock)
+      //console.log("Adding New Block:", newBlock)
     } else {
       // Helper to convert HH:MM to minutes (number) for your Interval interface
       const timeToNum = (t: string) => {

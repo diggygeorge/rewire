@@ -5,7 +5,7 @@ function isOverTimeLimit(currentSite, limits, currentDay, screenTimes) {
     if (!limits) {
       return false
     }
-    console.log(currentSite, limits, currentDay, screenTimes)
+    //console.log(currentSite, limits, currentDay, screenTimes)
     for (let i = 0; i < limits.length; i++) {
       let limit = limits[i]
       if (limit.type == "LIMIT" && limit.website?.includes(currentSite) && screenTimes.get(currentSite) >= limit.times[currentDay]) {

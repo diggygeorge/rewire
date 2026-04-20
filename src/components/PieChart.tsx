@@ -42,7 +42,7 @@ export default function ScreenTimeChart() {
         setScreenTime(result.time)
       };
     });
-    console.log("Getting current status from background...");
+    //console.log("Getting current status from background...");
     (window as any).chrome.runtime.sendMessage({ type: "GET_CURRENT_STATUS" }, (response: any) => {
       if (response && response.site && response.startTime) {
         setActiveSession({ site: response.site, startTime: response.startTime });
@@ -76,7 +76,7 @@ export default function ScreenTimeChart() {
   if (activeSession && !liveChartData.some(([site]) => site === activeSession.site)) {
     const elapsedMs = now - activeSession.startTime;
     liveChartData.push([activeSession.site, elapsedMs / 1000, parseTime(elapsedMs / 1000)]);
-    console.log(liveChartData)
+    //console.log(liveChartData)
   }
 
   const chartData = liveChartData.map(([site, time, displayMinutes], index) => {
