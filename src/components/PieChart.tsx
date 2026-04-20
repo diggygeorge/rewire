@@ -116,8 +116,8 @@ export default function ScreenTimeChart() {
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
               No screen time recorded yet today.
             </div>
-          ) : (
-            <ChartContainer
+          ) : (chartData.length < 9 && 
+            (<ChartContainer
               config={chartConfig}
               className="mx-auto aspect-square max-h-[300px]"
             >
@@ -160,14 +160,14 @@ export default function ScreenTimeChart() {
                   className="-translate-y-2 flex-wrap gap-2 *:basis-1/3 *:justify-center mt-4"
                 />
               </PieChart>
-            </ChartContainer>
+            </ChartContainer>)
           )
         }
-        {chartData.length > 7 && (
+        {chartData.length > 8 && (
           <div className="mt-6">
-            <h3 className="text-sm font-semibold mb-2">Other Sites:</h3>
+            <h3 className="text-sm font-semibold mb-2">Sites:</h3>
             <ul className="space-y-1 text-sm">
-              {chartData.slice(7).map((item) => (
+              {chartData.map((item) => (
                 <li key={item.site} className="flex justify-between">
                   <span className="truncate">{item.site}</span>
                   <span className="font-mono">{item.display}</span>
